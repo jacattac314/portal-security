@@ -510,7 +510,8 @@
       flex-direction: column;
       gap: 16px;
       overflow: hidden;
-      height: 100%;
+      min-height: 100%;
+      height: auto;
       box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
       backdrop-filter: blur(12px);
       transition: border-color 0.3s ease, box-shadow 0.3s ease;
@@ -597,6 +598,7 @@
     
     .sec-list-box {
       flex: 1;
+      max-height: 250px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
@@ -835,20 +837,20 @@
               <span>Architecture Call Flow</span>
               <span class="sec-badge badge-info" id="arch-total-flows">0 Flows</span>
             </h3>
-            <div class="sec-metrics">
-              <div class="sec-metric-item">
-                <span class="metric-label">Taint Violations</span>
-                <span class="metric-value text-red" id="arch-violations-count">0</span>
-              </div>
-              <div class="sec-metric-item">
-                <span class="metric-label">Safe Traces</span>
-                <span class="metric-value text-green" id="arch-safe-count">0</span>
-              </div>
-              <div class="sec-metric-item">
-                <span class="metric-label">Isolation Status</span>
-                <span class="metric-value" id="arch-isolation-status">-</span>
-              </div>
-            </div>
+             <div class="sec-metrics" style="grid-template-columns: repeat(2, 1fr); gap: 12px 10px;">
+               <div class="sec-metric-item">
+                 <span class="metric-label">Taint Violations</span>
+                 <span class="metric-value text-red" id="arch-violations-count">0</span>
+               </div>
+               <div class="sec-metric-item">
+                 <span class="metric-label">Safe Traces</span>
+                 <span class="metric-value text-green" id="arch-safe-count">0</span>
+               </div>
+               <div class="sec-metric-item" style="grid-column: span 2; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px; flex-direction: row; justify-content: space-between; width: 100%;">
+                 <span class="metric-label" style="font-size: 11px; font-weight: 500;">Isolation Status</span>
+                 <span class="metric-value" id="arch-isolation-status">-</span>
+               </div>
+             </div>
             
             <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">
               Path trace analysis from inputs (Payload, Request) to database/telemetry sinks.
@@ -900,6 +902,15 @@
                 <button class="dlp-btn btn-sec" onclick="loadDlpScenario('log')">DB Logs</button>
                 <button class="dlp-btn btn-sec" onclick="loadDlpScenario('api')">Webhook Payload</button>
               </div>
+            </div>
+            
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <span style="font-size: 12px; font-weight:600; color: var(--text-muted);">Sanitization Policy:</span>
+              <select id="dlp-policy" onchange="runDlpSanitize()" style="background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-color); border-radius: 6px; padding: 6px 12px; color: var(--text-main); outline: none; font-size: 12px; cursor: pointer; transition: all 0.2s ease;">
+                <option value="redact">Full Redaction (Label)</option>
+                <option value="mask">Masking (e.g. ***-**-9901)</option>
+                <option value="token">Tokenization (Mock Token)</option>
+              </select>
             </div>
             
             <div style="display:flex; flex-direction:column; gap:6px; flex:1; min-height: 120px;">
@@ -1111,7 +1122,11 @@
       try {
         const response = await fetch(repo.reportPath);
         if (response.ok) {
-          const markdown = await response.text();
+          let markdown = await response.text();
+          // Clean Wiki links like [[_COMMUNITY_Community 0|Community 0]]
+          markdown = markdown.replace(/\[\[(?:_COMMUNITY_)?([^\]|]+)\|([^\]]+)\]\]/gi, '<span style="color: var(--accent-color); font-weight: 500;">$2</span>');
+          markdown = markdown.replace(/\[\/[\/|\w|_|-]+\|/gi, ''); // clean other wiki paths
+          markdown = markdown.replace(/\[\[(?:_COMMUNITY_)?([^\]]+)\]\]/gi, '<span style="color: var(--accent-color); font-weight: 500;">$1</span>');
           document.getElementById("report-content").innerHTML = marked.parse(markdown);
           
           // Parse node and edge counts from markdown if possible
@@ -1135,6 +1150,7 @@
       document.getElementById("static-issues-count").innerText = "0";
       document.getElementById("static-scan-list").innerHTML = `<div class="sec-empty-state">Click 'Scan Code' to scan local codebase files</div>`;
       
+      window.originalNodeStyles = null;
       activeGraphData = null;
       try {
         const jsonPath = repo.graphPath.replace("graph.html", "graph.json");
@@ -1155,6 +1171,9 @@
         // Add a small delay to allow vis-network inside the iframe to finish initialization
         setTimeout(() => {
           applyLayoutMode(document.getElementById("layout-mode").value);
+          if (activeTab === "security") {
+            applySecurityGraphColoring();
+          }
         }, 150);
       };
     }
@@ -1204,6 +1223,174 @@
       
       if (tab === "security" && activeGraphData) {
         runStructuralAudit(activeGraphData);
+        applySecurityGraphColoring();
+      } else if (tab === "graph") {
+        restoreSecurityGraphColoring();
+      }
+    }
+
+    // Apply 3D-like security graph node coloring in Vis.js
+    function applySecurityGraphColoring() {
+      const iframe = document.getElementById("graph-frame");
+      if (!iframe || !iframe.contentWindow) return;
+      const network = iframe.contentWindow.capturedNetwork;
+      if (!network) return;
+      
+      const nodesDataSet = network.body.data.nodes;
+      if (!nodesDataSet) return;
+      
+      if (!window.originalNodeStyles) {
+        window.originalNodeStyles = {};
+        nodesDataSet.get().forEach(n => {
+          window.originalNodeStyles[n.id] = {
+            color: n.color,
+            font: n.font
+          };
+        });
+      }
+      
+      if (!activeGraphData || !activeGraphData.nodes) return;
+      
+      const nodes = activeGraphData.nodes;
+      const links = activeGraphData.links;
+      
+      const nodesMap = {};
+      nodes.forEach(n => { nodesMap[n.id] = n; });
+      const adjList = {};
+      nodes.forEach(n => { adjList[n.id] = []; });
+      links.forEach(l => {
+        const s = l.source; const t = l.target;
+        if (adjList[s] && adjList[t]) {
+          adjList[s].push(t);
+          adjList[t].push(s);
+        }
+      });
+      
+      const inputRegex = /(request|payload|input|message|args)/i;
+      const sanitizerRegex = /(verify|sanitize|pii|auth|check|filter)/i;
+      const sinkRegex = /(log|ledger|metric|write|save|store|db)/i;
+      const dbModelRegex = /(model|schema|store|database)/i;
+      const telemetryRegex = /(log|telemetry|metric|tracker)/i;
+      
+      const inputIds = [];
+      const sanitizerIds = [];
+      const sinkIds = [];
+      const dbModelIds = [];
+      const telemetryIds = [];
+      
+      nodes.forEach(n => {
+        const lbl = n.label || "";
+        const file = n.source_file || "";
+        
+        if (inputRegex.test(lbl) || inputRegex.test(file)) inputIds.push(n.id);
+        if (sanitizerRegex.test(lbl) || sanitizerRegex.test(file)) sanitizerIds.push(n.id);
+        if (sinkRegex.test(lbl) || sinkRegex.test(file)) sinkIds.push(n.id);
+        if (dbModelRegex.test(lbl) || dbModelRegex.test(file)) dbModelIds.push(n.id);
+        if (telemetryRegex.test(lbl) || telemetryRegex.test(file)) telemetryIds.push(n.id);
+      });
+      
+      const taintedSinkIds = new Set();
+      const safeSinkIds = new Set();
+      
+      inputIds.forEach(inputId => {
+        sinkIds.forEach(sinkId => {
+          if (inputId === sinkId) return;
+          const paths = findPaths(inputId, sinkId, adjList, nodesMap, 5);
+          paths.forEach(path => {
+            const traversedSanitizers = path.filter(id => sanitizerIds.includes(id));
+            if (traversedSanitizers.length > 0) {
+              safeSinkIds.add(sinkId);
+            } else {
+              taintedSinkIds.add(sinkId);
+            }
+          });
+        });
+      });
+      
+      const isolationLeakingIds = new Set();
+      dbModelIds.forEach(modelId => {
+        telemetryIds.forEach(teleId => {
+          if (modelId === teleId) return;
+          const paths = findPaths(modelId, teleId, adjList, nodesMap, 4);
+          paths.forEach(path => {
+            const traversedSanitizers = path.filter(id => sanitizerIds.includes(id));
+            if (traversedSanitizers.length === 0) {
+              isolationLeakingIds.add(teleId);
+              isolationLeakingIds.add(modelId);
+            }
+          });
+        });
+      });
+      
+      const updates = [];
+      nodesDataSet.get().forEach(n => {
+        let background = "#374151";
+        let border = "#4b5563";
+        let labelColor = "#ffffff";
+        
+        if (sanitizerIds.includes(n.id)) {
+          background = "#00b0ff";
+          border = "#0091ea";
+        } else if (inputIds.includes(n.id)) {
+          background = "#ffc400";
+          border = "#ffab00";
+          labelColor = "#000000";
+        } else if (isolationLeakingIds.has(n.id)) {
+          background = "#d500f9";
+          border = "#aa00ff";
+        } else if (taintedSinkIds.has(n.id)) {
+          background = "#ff1744";
+          border = "#d50000";
+        } else if (safeSinkIds.has(n.id)) {
+          background = "#00e676";
+          border = "#00c853";
+          labelColor = "#000000";
+        }
+        
+        updates.push({
+          id: n.id,
+          color: {
+            background: background,
+            border: border,
+            highlight: {
+              background: background,
+              border: border
+            }
+          },
+          font: {
+            color: labelColor,
+            face: "Outfit"
+          }
+        });
+      });
+      
+      nodesDataSet.update(updates);
+    }
+
+    // Restore original community graph colors
+    function restoreSecurityGraphColoring() {
+      const iframe = document.getElementById("graph-frame");
+      if (!iframe || !iframe.contentWindow) return;
+      const network = iframe.contentWindow.capturedNetwork;
+      if (!network) return;
+      
+      const nodesDataSet = network.body.data.nodes;
+      if (!nodesDataSet || !window.originalNodeStyles) return;
+      
+      const updates = [];
+      nodesDataSet.get().forEach(n => {
+        const orig = window.originalNodeStyles[n.id];
+        if (orig) {
+          updates.push({
+            id: n.id,
+            color: orig.color,
+            font: orig.font
+          });
+        }
+      });
+      
+      if (updates.length > 0) {
+        nodesDataSet.update(updates);
       }
     }
 
@@ -1506,6 +1693,53 @@
                 desc: `Sensitive PII/PHI variable name declared.`
               });
             }
+            
+            // Custom Semgrep Rule: SQL Injection Risk
+            if (/\.(?:query|execute|select|raw)\s*\(/i.test(line)) {
+              if (/\+/.test(line) || /\$\{.*\}/.test(line) || /f['"].*\{.*\}['"]/.test(line)) {
+                issues.push({
+                  file: file,
+                  line: i + 1,
+                  rule: "Semgrep: SQL Injection Risk",
+                  severity: "CRITICAL",
+                  snippet: line.trim(),
+                  desc: `Database execution query uses unsafe string interpolation/concatenation instead of parameterized queries.`
+                });
+              }
+            }
+            
+            // Custom Semgrep Rule: Missing Endpoint Authorization
+            if (/\.(?:get|post|put|delete|patch)\s*\(\s*['"`]\/(?:api|v\d)\//i.test(line)) {
+              if (!/auth|admin|verify|jwt|token|guard|session|perm|check|pii/i.test(line)) {
+                issues.push({
+                  file: file,
+                  line: i + 1,
+                  rule: "Semgrep: Missing Auth Check",
+                  severity: "WARNING",
+                  snippet: line.trim(),
+                  desc: `Route endpoint defined without explicit authorization/security middleware checks.`
+                });
+              }
+            } else if (/@app\.(?:get|post|put|delete|patch|route)\s*\(/i.test(line)) {
+              let hasAuth = false;
+              for (let offset = 0; offset <= 2; offset++) {
+                const nextLine = lines[i + offset];
+                if (nextLine && /auth|admin|verify|jwt|token|guard|session|perm|check|pii|Security|Depends/i.test(nextLine)) {
+                  hasAuth = true;
+                  break;
+                }
+              }
+              if (!hasAuth) {
+                issues.push({
+                  file: file,
+                  line: i + 1,
+                  rule: "Semgrep: Missing Auth Check",
+                  severity: "WARNING",
+                  snippet: line.trim(),
+                  desc: `FastAPI route endpoint lacks apparent security dependencies or auth checks.`
+                });
+              }
+            }
           });
           
         } catch (e) {
@@ -1563,10 +1797,20 @@
         .replace(/'/g, "&#039;");
     }
 
+    function simpleHash(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = (hash << 5) - hash + str.charCodeAt(i);
+        hash |= 0;
+      }
+      return Math.abs(hash).toString(16).toUpperCase();
+    }
+
     // Live DLP Sanitization Playground (Cloud DLP / Macie simulator)
     function runDlpSanitize() {
       const text = document.getElementById("dlp-input").value;
       const outputEl = document.getElementById("dlp-output");
+      const policy = document.getElementById("dlp-policy") ? document.getElementById("dlp-policy").value : "redact";
       
       if (!text.trim()) {
         outputEl.innerHTML = `<span style="color: var(--text-muted); font-style: italic;">Redacted results will render here in real-time...</span>`;
@@ -1584,6 +1828,11 @@
           regex: /\b\d{3}-\d{2}-\d{4}\b/g,
           replacement: (match) => {
             count++;
+            if (policy === "mask") {
+              return `<span class="dlp-highlight">***-**-${match.slice(-4)}</span>`;
+            } else if (policy === "token") {
+              return `<span class="dlp-highlight">TOK_SSN_${simpleHash(match)}</span>`;
+            }
             return `<span class="dlp-highlight">[REDACTED_SSN]</span>`;
           }
         },
@@ -1592,6 +1841,12 @@
           regex: /(^|[^0-9a-zA-Z])((?:\+?\d{1,3}[-. ]?)?\(?\d{3}\)?[-. ]?\d{3}[-. ]?\d{4})\b/g,
           replacement: (match, p1, p2) => {
             count++;
+            if (policy === "mask") {
+              const maskedPhone = p2.replace(/\d(?=\d{4})/g, '*');
+              return p1 + `<span class="dlp-highlight">${maskedPhone}</span>`;
+            } else if (policy === "token") {
+              return p1 + `<span class="dlp-highlight">TOK_PHONE_${simpleHash(p2)}</span>`;
+            }
             return p1 + `<span class="dlp-highlight">[REDACTED_PHONE]</span>`;
           }
         },
@@ -1600,6 +1855,16 @@
           regex: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
           replacement: (match) => {
             count++;
+            if (policy === "mask") {
+              const parts = match.split('@');
+              const name = parts[0];
+              const domain = parts[1];
+              const maskedName = name[0] + '***' + (name.length > 2 ? name[name.length - 1] : '');
+              const maskedDomain = domain[0] + '***' + (domain.length > 2 ? domain[domain.length - 1] : '');
+              return `<span class="dlp-highlight">${maskedName}@${maskedDomain}</span>`;
+            } else if (policy === "token") {
+              return `<span class="dlp-highlight">TOK_EMAIL_${simpleHash(match)}</span>`;
+            }
             return `<span class="dlp-highlight">[REDACTED_EMAIL]</span>`;
           }
         },
@@ -1608,6 +1873,14 @@
           regex: /\b[A-Z]\d{2}(?:\.[A-Z0-9]{1,4})?\b/gi,
           replacement: (match) => {
             count++;
+            if (policy === "mask") {
+              if (match.includes('.')) {
+                return `<span class="dlp-highlight">${match.split('.')[0]}.***</span>`;
+              }
+              return `<span class="dlp-highlight">${match.slice(0, 1)}**</span>`;
+            } else if (policy === "token") {
+              return `<span class="dlp-highlight">TOK_ICD_${simpleHash(match)}</span>`;
+            }
             return `<span class="dlp-highlight">[REDACTED_ICD10: ${match}]</span>`;
           }
         }
