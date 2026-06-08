@@ -1,0 +1,1741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Graphify Workspace Portal</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Marked.js for Markdown Rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  
+  <style>
+    :root {
+      --bg-color: #0b0c10;
+      --panel-bg: rgba(21, 23, 35, 0.7);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --text-main: #f5f6fa;
+      --text-muted: #8b949e;
+      --accent-color: #4fc3f7; /* Default Cyber Cyan */
+      
+      /* Accent color palettes for different repo themes */
+      --accent-serve: #ff7043; /* Warm Orange for ShadowServe */
+      --accent-gov: #10b981;   /* Emerald Green for Governance */
+      --accent-finance: #ec4899; /* Pink for Finance */
+      --accent-orch: #8b5cf6;  /* Purple for Orchestrator */
+      --accent-agent: #f59e0b; /* Amber for Agents */
+      --accent-sim: #3b82f6;   /* Blue for Simulators */
+      --accent-client: #06b6d4;/* Cyan for Client/Hermes */
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(79, 195, 247, 0.07) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.05) 0px, transparent 50%);
+    }
+
+    /* --- Sidebar --- */
+    .sidebar {
+      width: 340px;
+      height: 100vh;
+      background: rgba(15, 16, 22, 0.85);
+      border-right: 1px solid var(--border-color);
+      backdrop-filter: blur(20px);
+      display: flex;
+      flex-direction: flex-direction;
+      flex-flow: column;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header {
+      padding: 24px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .sidebar-header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #f5f6fa 30%, var(--accent-color) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-header p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .search-box {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .search-box input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    .search-box input:focus {
+      border-color: var(--accent-color);
+      background: rgba(255, 255, 255, 0.07);
+      box-shadow: 0 0 10px rgba(79, 195, 247, 0.15);
+    }
+
+    .repo-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 16px;
+    }
+
+    .repo-list::-webkit-scrollbar {
+      width: 6px;
+    }
+    .repo-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+    }
+
+    .repo-item {
+      padding: 14px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-bottom: 8px;
+      border: 1px solid transparent;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      background: rgba(255, 255, 255, 0.01);
+    }
+
+    .repo-item:hover {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.05);
+      transform: translateX(4px);
+    }
+
+    .repo-item.active {
+      background: rgba(var(--accent-rgb), 0.08);
+      border-color: rgba(var(--accent-rgb), 0.3);
+      box-shadow: inset 0 0 12px rgba(var(--accent-rgb), 0.05);
+    }
+
+    .repo-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .repo-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+    }
+
+    .repo-lang {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+    }
+
+    .repo-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* --- Main Workspace --- */
+    .workspace {
+      flex: 1;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+      background: transparent;
+    }
+
+    .workspace-header {
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .workspace-info h2 {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .workspace-info h2 .lang-badge {
+      font-size: 12px;
+      font-weight: 500;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: rgba(var(--accent-rgb), 0.15);
+      border: 1px solid rgba(var(--accent-rgb), 0.3);
+      color: var(--accent-color);
+    }
+
+    .workspace-info p {
+      font-size: 14px;
+      color: var(--text-muted);
+      max-width: 800px;
+      line-height: 1.5;
+    }
+
+    .github-link {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--accent-color);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: rgba(var(--accent-rgb), 0.1);
+      border: 1px solid rgba(var(--accent-rgb), 0.2);
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .github-link:hover {
+      background: rgba(var(--accent-rgb), 0.2);
+      transform: translateY(-1px);
+    }
+
+    /* --- Tabs --- */
+    .tabs-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      padding: 6px;
+      border-radius: 10px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .tab-btn.active {
+      color: var(--text-main);
+      background: rgba(var(--accent-rgb), 0.15);
+      border: 1px solid rgba(var(--accent-rgb), 0.25);
+    }
+
+    .graph-meta {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-right: 12px;
+    }
+
+    /* --- Content Panels --- */
+    .panel-container {
+      flex: 1;
+      position: relative;
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(10px);
+    }
+
+    .panel {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      padding: 0;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: transparent;
+    }
+
+    .report-view {
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      padding: 32px 40px;
+      font-size: 15px;
+      line-height: 1.6;
+      color: #e6edf3;
+    }
+
+    .report-view::-webkit-scrollbar {
+      width: 8px;
+    }
+    .report-view::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
+
+    /* --- Markdown Styles inside Report --- */
+    .report-view h1 {
+      font-size: 28px;
+      font-weight: 700;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+      padding-bottom: 8px;
+      margin-bottom: 20px;
+      color: var(--text-main);
+    }
+
+    .report-view h2 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-top: 28px;
+      margin-bottom: 12px;
+      color: var(--accent-color);
+    }
+
+    .report-view h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      color: var(--text-main);
+    }
+
+    .report-view ul, .report-view ol {
+      margin-left: 24px;
+      margin-bottom: 16px;
+    }
+
+    .report-view li {
+      margin-bottom: 6px;
+    }
+
+    .report-view p {
+      margin-bottom: 16px;
+    }
+
+    .report-view code {
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+      background: rgba(255, 255, 255, 0.07);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #ff7b72;
+    }
+
+    .report-view pre {
+      background: rgba(0, 0, 0, 0.5);
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin-bottom: 16px;
+      border: 1px solid var(--border-color);
+    }
+
+    .report-view pre code {
+      background: transparent;
+      padding: 0;
+      color: inherit;
+    }
+
+    .report-view a {
+      color: var(--accent-color);
+      text-decoration: none;
+    }
+
+    .report-view a:hover {
+      text-decoration: underline;
+    }
+
+    .report-view blockquote {
+      border-left: 4px solid var(--accent-color);
+      padding-left: 16px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      font-style: italic;
+    }
+
+    .report-view table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    .report-view th, .report-view td {
+      border: 1px solid var(--border-color);
+      padding: 8px 12px;
+      text-align: left;
+    }
+
+    .report-view th {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* --- Loading State --- */
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      flex-direction: column;
+      gap: 16px;
+      transition: opacity 0.5s ease;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(var(--accent-rgb), 0.1);
+      border-top-color: var(--accent-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* --- Layout Selector --- */
+    .layout-selector {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .layout-selector select {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 6px 12px;
+      color: var(--text-main);
+      outline: none;
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .layout-selector select:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--accent-color);
+    }
+
+    /* --- Security Governance Tab styles --- */
+    .security-view {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      height: 100%;
+      padding: 24px;
+      overflow-y: auto;
+      background: rgba(10, 11, 15, 0.4);
+    }
+    
+    .sec-card {
+      background: rgba(25, 27, 38, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow: hidden;
+      height: 100%;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(12px);
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .sec-card:hover {
+      border-color: rgba(var(--accent-rgb), 0.3);
+      box-shadow: 0 8px 32px 0 rgba(var(--accent-rgb), 0.05);
+    }
+    
+    .sec-card h3 {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-main);
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .sec-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+    }
+    
+    .sec-metric-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      text-align: center;
+    }
+    
+    .metric-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    
+    .metric-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    
+    .text-red { color: #ff5252; }
+    .text-green { color: #00e676; }
+    .text-orange { color: #ffa726; }
+    
+    .sec-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-info {
+      background: rgba(79, 195, 247, 0.15);
+      border: 1px solid rgba(79, 195, 247, 0.3);
+      color: #4fc3f7;
+    }
+    .badge-alert {
+      background: rgba(255, 82, 82, 0.15);
+      border: 1px solid rgba(255, 82, 82, 0.3);
+      color: #ff5252;
+    }
+    .badge-warn {
+      background: rgba(255, 167, 38, 0.15);
+      border: 1px solid rgba(255, 167, 38, 0.3);
+      color: #ffa726;
+    }
+    .badge-success {
+      background: rgba(0, 230, 118, 0.15);
+      border: 1px solid rgba(0, 230, 118, 0.3);
+      color: #00e676;
+    }
+    
+    .sec-list-box {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-right: 4px;
+    }
+    
+    .sec-list-box::-webkit-scrollbar {
+      width: 4px;
+    }
+    .sec-list-box::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
+    }
+    
+    .sec-item {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 13px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    .sec-item:hover {
+      background: rgba(255, 255, 255, 0.04);
+      transform: translateY(-1.5px);
+    }
+    
+    .sec-violation-item {
+      border-left: 3px solid #ff5252;
+      background: rgba(255, 82, 82, 0.03);
+    }
+    .sec-violation-item:hover {
+      background: rgba(255, 82, 82, 0.06);
+      border-left-color: #ff1744;
+    }
+    
+    .sec-safe-item {
+      border-left: 3px solid #00e676;
+      background: rgba(0, 230, 118, 0.02);
+    }
+    .sec-safe-item:hover {
+      background: rgba(0, 230, 118, 0.05);
+      border-left-color: #00c853;
+    }
+    
+    .sec-scan-item {
+      border-left: 3px solid #ffa726;
+      background: rgba(255, 167, 38, 0.02);
+    }
+    .sec-scan-item:hover {
+      background: rgba(255, 167, 38, 0.05);
+      border-left-color: #f57c00;
+    }
+    
+    .sec-empty-state {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      color: var(--text-muted);
+      font-size: 13px;
+      text-align: center;
+      padding: 20px;
+      font-style: italic;
+      border: 1px dashed var(--border-color);
+      border-radius: 8px;
+    }
+    
+    .dlp-scenarios {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    
+    .dlp-btn {
+      background: rgba(var(--accent-rgb), 0.15);
+      border: 1px solid rgba(var(--accent-rgb), 0.3);
+      color: var(--accent-color);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+    
+    .dlp-btn:hover {
+      background: rgba(var(--accent-rgb), 0.25);
+      border-color: var(--accent-color);
+      transform: translateY(-1px);
+    }
+    
+    .dlp-btn.btn-sec {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: var(--border-color);
+      color: var(--text-muted);
+    }
+    
+    .dlp-btn.btn-sec:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+    }
+    
+    .dlp-textarea {
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px;
+      color: var(--text-main);
+      font-family: 'Fira Code', monospace;
+      font-size: 12px;
+      resize: none;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    
+    .dlp-textarea:focus {
+      border-color: var(--accent-color);
+      background: rgba(0, 0, 0, 0.35);
+    }
+    
+    .dlp-output {
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px;
+      color: var(--text-main);
+      font-family: 'Fira Code', monospace;
+      font-size: 12px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    
+    .dlp-highlight {
+      background: rgba(255, 82, 82, 0.25);
+      border-bottom: 2px dashed #ff5252;
+      padding: 0 2px;
+      border-radius: 2px;
+      color: #ff5252;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h1>Codebase Navigator</h1>
+      <p>Multi-Repository Graphify Workspace</p>
+    </div>
+    
+    <div class="search-box">
+      <input type="text" id="search" placeholder="Filter repositories...">
+    </div>
+    
+    <div class="repo-list" id="repo-list">
+      <!-- Generated dynamically -->
+    </div>
+  </div>
+
+  <!-- Main Workspace -->
+  <div class="workspace">
+    <div class="workspace-header">
+      <div class="workspace-info">
+        <h2 id="w-name">Repository Name <span class="lang-badge" id="w-lang">Language</span></h2>
+        <p id="w-desc">Loading repository details...</p>
+      </div>
+      <a href="#" class="github-link" id="w-link" target="_blank">
+        <svg height="16" viewBox="0 0 16 16" width="16" fill="currentColor" style="vertical-align: middle;"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+        GitHub Repository
+      </a>
+    </div>
+
+    <!-- Tabs controls -->
+    <div class="tabs-container">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('graph')">Interactive 3D Graph</button>
+        <button class="tab-btn" onclick="switchTab('report')">Structure Report</button>
+        <button class="tab-btn" onclick="switchTab('security')">Security Governance</button>
+      </div>
+      <div class="layout-selector" id="layout-ctrl">
+        <span style="font-size: 13px; color: var(--text-muted);">Layout:</span>
+        <select id="layout-mode" onchange="changeLayout(this.value)">
+          <option value="force">Force-Directed (3D-like)</option>
+          <option value="UD">Top-Down Dataflow</option>
+          <option value="LR">Left-Right Dataflow</option>
+        </select>
+      </div>
+      <div class="graph-meta" id="w-meta">
+        0 nodes · 0 edges
+      </div>
+    </div>
+
+    <!-- Panel Viewport -->
+    <div class="panel-container">
+      
+      <!-- Loading state overlay -->
+      <div class="loading-overlay" id="loading">
+        <div class="spinner"></div>
+        <p style="color: var(--text-muted); font-size: 14px;">Loading graph visualization...</p>
+      </div>
+
+      <!-- Tab 1: Graph Iframe -->
+      <div class="panel active" id="panel-graph">
+        <iframe id="graph-frame" src="about:blank"></iframe>
+      </div>
+
+      <!-- Tab 2: HTML Markdown View -->
+      <div class="panel" id="panel-report">
+        <div class="report-view" id="report-content">
+          <!-- Rendered Markdown goes here -->
+        </div>
+      </div>
+
+      <!-- Tab 3: Security Governance View -->
+      <div class="panel" id="panel-security">
+        <div class="security-view">
+          
+          <!-- Column 1: Architecture Verification -->
+          <div class="sec-card">
+            <h3>
+              <span>Architecture Call Flow</span>
+              <span class="sec-badge badge-info" id="arch-total-flows">0 Flows</span>
+            </h3>
+            <div class="sec-metrics">
+              <div class="sec-metric-item">
+                <span class="metric-label">Taint Violations</span>
+                <span class="metric-value text-red" id="arch-violations-count">0</span>
+              </div>
+              <div class="sec-metric-item">
+                <span class="metric-label">Safe Traces</span>
+                <span class="metric-value text-green" id="arch-safe-count">0</span>
+              </div>
+              <div class="sec-metric-item">
+                <span class="metric-label">Isolation Status</span>
+                <span class="metric-value" id="arch-isolation-status">-</span>
+              </div>
+            </div>
+            
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">
+              Path trace analysis from inputs (Payload, Request) to database/telemetry sinks.
+            </div>
+            
+            <div class="sec-list-box" id="arch-flows-list">
+              <div class="sec-empty-state">Select a repository to verify architecture</div>
+            </div>
+          </div>
+          
+          <!-- Column 2: Static Analysis (Semgrep) -->
+          <div class="sec-card">
+            <h3>
+              <span>Static Variable Scan</span>
+              <button class="dlp-btn" style="padding: 4px 10px; font-size: 11px;" onclick="runStaticCodeScan()">Scan Code</button>
+            </h3>
+            
+            <div class="sec-metrics" style="grid-template-columns: repeat(2, 1fr);">
+              <div class="sec-metric-item">
+                <span class="metric-label">Files Scanned</span>
+                <span class="metric-value" id="static-files-count">0</span>
+              </div>
+              <div class="sec-metric-item">
+                <span class="metric-label">Issues Found</span>
+                <span class="metric-value text-orange" id="static-issues-count">0</span>
+              </div>
+            </div>
+
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">
+              Flags hardcoded credentials, sensitive variables (ssn, patient, health), and unsafe parameter-logging routines.
+            </div>
+            
+            <div class="sec-list-box" id="static-scan-list">
+              <div class="sec-empty-state">Click 'Scan Code' to scan local codebase files</div>
+            </div>
+          </div>
+          
+          <!-- Column 3: Data Loss Prevention (DLP) -->
+          <div class="sec-card">
+            <h3>
+              <span>DLP Control Center</span>
+              <span class="sec-badge badge-alert" id="dlp-redacted-count">0 Redacted</span>
+            </h3>
+            
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <span style="font-size: 12px; font-weight:600; color: var(--text-muted);">Quick-Load Audit Scenarios:</span>
+              <div class="dlp-scenarios">
+                <button class="dlp-btn btn-sec" onclick="loadDlpScenario('medical')">Med Transcript</button>
+                <button class="dlp-btn btn-sec" onclick="loadDlpScenario('log')">DB Logs</button>
+                <button class="dlp-btn btn-sec" onclick="loadDlpScenario('api')">Webhook Payload</button>
+              </div>
+            </div>
+            
+            <div style="display:flex; flex-direction:column; gap:6px; flex:1; min-height: 120px;">
+              <span style="font-size: 12px; font-weight:600; color: var(--text-muted);">Input Stream Simulator:</span>
+              <textarea class="dlp-textarea" id="dlp-input" placeholder="Type or load a scenario containing PII (SSN, Phone, Email) or PHI (ICD-10) to sanitize..."></textarea>
+            </div>
+            
+            <div style="display:flex; flex-direction:column; gap:6px; flex:1; min-height: 120px;">
+              <span style="font-size: 12px; font-weight:600; color: var(--text-muted);">Sanitized Output Stream:</span>
+              <div class="dlp-output" id="dlp-output">
+                <span style="color: var(--text-muted); font-style: italic;">Redacted results will render here in real-time...</span>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const REPOSITORIES = [
+      {
+        id: "shadowserve-ai",
+        name: "shadowserve-ai",
+        lang: "Python",
+        desc: "Enterprise model serving proxy with shadow routing, drift detection, and compliance auditing for regulated financial environments.",
+        url: "https://github.com/jacattac314/shadowserve-ai",
+        graphPath: "./shadowserve-ai/graphify-out/graph.html",
+        reportPath: "./shadowserve-ai/graphify-out/GRAPH_REPORT.md",
+        accent: "var(--accent-serve)",
+        accentRgb: "255, 112, 67"
+      },
+      {
+        id: "shadow-governance",
+        name: "shadow-governance",
+        lang: "TypeScript",
+        desc: "Observability middleware for decentralized AI agent fleets — token quotas, PII sanitization, eval A/B testing.",
+        url: "https://github.com/jacattac314/shadow-governance",
+        graphPath: "./shadow-governance/graphify-out/graph.html",
+        reportPath: "./shadow-governance/graphify-out/GRAPH_REPORT.md",
+        accent: "var(--accent-gov)",
+        accentRgb: "16, 185, 129"
+      },
+      {
+        id: "Titan-Finance-",
+        name: "Titan-Finance- (TitanFlow)",
+        lang: "Python",
+        desc: "Event-driven trading platform separating market ingestion, signal generation, risk controls, execution, and operator visibility.",
+        url: "https://github.com/jacattac314/Titan-Finance-",
+        graphPath: "./Titan-Finance-/graphify-out/graph.html",
+        reportPath: "./Titan-Finance-/graphify-out/GRAPH_REPORT.md",
+        accent: "var(--accent-finance)",
+        accentRgb: "236, 72, 153"
+      },
+      {
+        id: "local-ai-orchestrator",
+        name: "local-ai-orchestrator",
+        lang: "Python",
+        desc: "Self-hosted routing layer that sits between applications and LLM providers. Ingests benchmarks and dynamically routes requests.",
+        url: "https://github.com/jacattac314/local-ai-orchestrator",
+        graphPath: "./local-ai-orchestrator/graphify-out/graph.html",
+        reportPath: "./local-ai-orchestrator/graphify-out/GRAPH_REPORT.md",
+        accent: "var(--accent-orch)",
+        accentRgb: "139, 92, 246"
+      },
+      {
+        id: "SOVEREIGNDESK",
+        name: "SOVEREIGNDESK",
+        lang: "JavaScript",
+        desc: "Multi-Agent Support Engine & Operational Workspace with parallel tool executions and state-sharing panels.",
+        url: "https://github.com/jacattac314/SOVEREIGNDESK",
+        graphPath: "./SOVEREIGNDESK/graphify-out/graph.html",
+        reportPath: "./SOVEREIGNDESK/graphify-out/GRAPH_REPORT.md",
+        accent: "var(--accent-agent)",
+        accentRgb: "245, 158, 11"
+      },
+      {
+        id: "AI-Project-Autopilot-Agent",
+        name: "AI-Project-Autopilot-Agent",
+        lang: "TypeScript",
+        desc: "Formula 1 lap time prediction pipeline featuring data ingestion, engineering, ensemble training, and metrics analysis.",
+        url: "https://github.com/jacattac314/AI-Project-Autopilot-Agent",
+        graphPath: "./AI-Project-Autopilot-Agent/graphify-out/graph.html",
+        reportPath: "./AI-Project-Autopilot-Agent/graphify-out/GRAPH_REPORT.md",
+        accent: "var(--accent-sim)",
+        accentRgb: "59, 130, 246"
+      },
+      {
+        id: "JD-Automation-System",
+        name: "JD-Automation-System",
+        lang: "Python",
+        desc: "Local-first automation system transforming job descriptions into implemented code repositories using Gemini and Claude.",
+        url: "https://github.com/jacattac314/JD-Automation-System",
+        graphPath: "./JD-Automation-System/graphify-out/graph.html",
+        reportPath: "./JD-Automation-System/graphify-out/GRAPH_REPORT.md",
+        accent: "var(--accent-agent)",
+        accentRgb: "245, 158, 11"
+      },
+      {
+        id: "ModelOps-Control-Tower-Core-LLM-Program-Simulator",
+        name: "ModelOps-Control-Tower",
+        lang: "TypeScript",
+        desc: "Program management system for model training simulation: tracking dataset pipelines, experiments, and launch gates.",
+        url: "https://github.com/jacattac314/ModelOps-Control-Tower-Core-LLM-Program-Simulator",
+        graphPath: "./ModelOps-Control-Tower-Core-LLM-Program-Simulator/graphify-out/graph.html",
+        reportPath: "./ModelOps-Control-Tower-Core-LLM-Program-Simulator/graphify-out/GRAPH_REPORT.md",
+        accent: "var(--accent-sim)",
+        accentRgb: "59, 130, 246"
+      },
+      {
+        id: "Fluidity-",
+        name: "Fluidity-",
+        lang: "TypeScript",
+        desc: "Client-side MVP that ingests roadmap data, detects drift, generates narrative output, and renders Mermaid Gantt timelines.",
+        url: "https://github.com/jacattac314/Fluidity-",
+        graphPath: "./Fluidity-/graphify-out/graph.html",
+        reportPath: "./Fluidity-/graphify-out/GRAPH_REPORT.md",
+        accent: "var(--accent-serve)",
+        accentRgb: "255, 112, 67"
+      },
+      {
+        id: "Roadmap",
+        name: "Roadmap",
+        lang: "TypeScript",
+        desc: "Product Roadmap Generator automating structured product strategies via multi-agent pipelines.",
+        url: "https://github.com/jacattac314/Roadmap",
+        graphPath: "./Roadmap/graphify-out/graph.html",
+        reportPath: "./Roadmap/graphify-out/GRAPH_REPORT.md",
+        accent: "var(--accent-orch)",
+        accentRgb: "139, 92, 246"
+      },
+      {
+        id: "vibrant-goodall",
+        name: "vibrant-goodall (Hermes-X)",
+        lang: "Python / JS",
+        desc: "Obsidian local LLM client gateway, headed browser automation manager, and RAG evaluation runner.",
+        url: "https://github.com/jacattac314/Hermes-X",
+        graphPath: "./vibrant-goodall/graphify-out/graph.html",
+        reportPath: "./vibrant-goodall/graphify-out/GRAPH_REPORT.md",
+        accent: "var(--accent-client)",
+        accentRgb: "6, 182, 212"
+      }
+    ];
+
+    let activeRepo = REPOSITORIES[0];
+    let activeTab = "graph";
+    let activeGraphData = null;
+
+    // Initialize list
+    function renderRepoList(filterText = "") {
+      const listContainer = document.getElementById("repo-list");
+      listContainer.innerHTML = "";
+      
+      const filtered = REPOSITORIES.filter(repo => 
+        repo.name.toLowerCase().includes(filterText.toLowerCase()) ||
+        repo.desc.toLowerCase().includes(filterText.toLowerCase()) ||
+        repo.lang.toLowerCase().includes(filterText.toLowerCase())
+      );
+
+      filtered.forEach(repo => {
+        const div = document.createElement("div");
+        div.className = `repo-item ${repo.id === activeRepo.id ? 'active' : ''}`;
+        if (repo.id === activeRepo.id) {
+          div.style.setProperty('--accent-rgb', repo.accentRgb);
+        }
+        
+        div.innerHTML = `
+          <div class="repo-item-header">
+            <span class="repo-name" style="color: ${repo.id === activeRepo.id ? repo.accent : 'var(--text-main)'}">${repo.name}</span>
+            <span class="repo-lang">${repo.lang}</span>
+          </div>
+          <div class="repo-desc">${repo.desc}</div>
+        `;
+        
+        div.onclick = () => selectRepo(repo);
+        listContainer.appendChild(div);
+      });
+    }
+
+    // Select Repository
+    async function selectRepo(repo) {
+      activeRepo = repo;
+      
+      // Update custom HSL styles
+      document.documentElement.style.setProperty('--accent-color', repo.accent);
+      document.documentElement.style.setProperty('--accent-rgb', repo.accentRgb);
+      
+      // Render list again to update active state
+      renderRepoList(document.getElementById("search").value);
+      
+      // Update UI elements
+      document.getElementById("w-name").innerHTML = `${repo.name} <span class="lang-badge" id="w-lang" style="background: rgba(${repo.accentRgb}, 0.15); border: 1px solid rgba(${repo.accentRgb}, 0.3); color: ${repo.accent};">${repo.lang}</span>`;
+      document.getElementById("w-desc").innerText = repo.desc;
+      document.getElementById("w-link").href = repo.url;
+      
+      // Fetch graph metadata summary if available, otherwise hide
+      document.getElementById("w-meta").innerText = "Loading details...";
+      
+      // Trigger data load
+      showLoading(true);
+      
+      // Set iframe src
+      const iframe = document.getElementById("graph-frame");
+      iframe.src = repo.graphPath;
+      
+      // Load Markdown report
+      try {
+        const response = await fetch(repo.reportPath);
+        if (response.ok) {
+          const markdown = await response.text();
+          document.getElementById("report-content").innerHTML = marked.parse(markdown);
+          
+          // Parse node and edge counts from markdown if possible
+          const summaryMatch = markdown.match(/- (\d+) nodes · (\d+) edges/);
+          if (summaryMatch) {
+            document.getElementById("w-meta").innerText = `${summaryMatch[1]} nodes · ${summaryMatch[2]} edges`;
+          } else {
+            document.getElementById("w-meta").innerText = "AST Graph Loaded";
+          }
+        } else {
+          document.getElementById("report-content").innerHTML = `<p style="color: var(--accent-color);">No report structure file found for ${repo.name}. Did you run graphify update?</p>`;
+          document.getElementById("w-meta").innerText = "AST Graph Loaded";
+        }
+      } catch (err) {
+        document.getElementById("report-content").innerHTML = `<p style="color: var(--accent-color);">Error fetching report: ${err.message}</p>`;
+        document.getElementById("w-meta").innerText = "AST Graph Loaded";
+      }
+      
+      // Reset security panel states when switching repo
+      document.getElementById("static-files-count").innerText = "0";
+      document.getElementById("static-issues-count").innerText = "0";
+      document.getElementById("static-scan-list").innerHTML = `<div class="sec-empty-state">Click 'Scan Code' to scan local codebase files</div>`;
+      
+      activeGraphData = null;
+      try {
+        const jsonPath = repo.graphPath.replace("graph.html", "graph.json");
+        const jsonResponse = await fetch(jsonPath);
+        if (jsonResponse.ok) {
+          activeGraphData = await jsonResponse.json();
+          if (activeTab === "security") {
+            runStructuralAudit(activeGraphData);
+          }
+        }
+      } catch (err) {
+        console.error("Error loading graph JSON:", err);
+      }
+      
+      // Keep iframe load synchronous to display spinner
+      iframe.onload = () => {
+        showLoading(false);
+        // Add a small delay to allow vis-network inside the iframe to finish initialization
+        setTimeout(() => {
+          applyLayoutMode(document.getElementById("layout-mode").value);
+        }, 150);
+      };
+    }
+
+    // Toggle Loading overlay
+    function showLoading(show) {
+      const loading = document.getElementById("loading");
+      if (show) {
+        loading.style.display = "flex";
+        loading.style.opacity = "1";
+      } else {
+        loading.style.opacity = "0";
+        setTimeout(() => {
+          if (loading.style.opacity === "0") {
+            loading.style.display = "none";
+          }
+        }, 500);
+      }
+    }
+
+    // Switch active Tab panel
+    function switchTab(tab) {
+      activeTab = tab;
+      
+      const buttons = document.querySelectorAll(".tab-btn");
+      buttons.forEach(btn => {
+        btn.classList.remove("active");
+        btn.style.background = "transparent";
+        btn.style.border = "none";
+      });
+      
+      let activeBtn = buttons[0];
+      if (tab === "report") activeBtn = buttons[1];
+      if (tab === "security") activeBtn = buttons[2];
+      
+      if (activeBtn) {
+        activeBtn.classList.add("active");
+        activeBtn.style.background = `rgba(${activeRepo.accentRgb}, 0.15)`;
+        activeBtn.style.border = `1px solid rgba(${activeRepo.accentRgb}, 0.25)`;
+      }
+      
+      document.getElementById("panel-graph").classList.toggle("active", tab === "graph");
+      document.getElementById("panel-report").classList.toggle("active", tab === "report");
+      document.getElementById("panel-security").classList.toggle("active", tab === "security");
+      
+      document.getElementById("layout-ctrl").style.display = tab === "graph" ? "flex" : "none";
+      
+      if (tab === "security" && activeGraphData) {
+        runStructuralAudit(activeGraphData);
+      }
+    }
+
+    // BFS Pathfinder for structural call flow audits
+    function findPaths(startId, targetId, adjList, nodesMap, maxDepth = 6) {
+      let paths = [];
+      let queue = [[startId, [startId]]];
+      
+      while (queue.length > 0) {
+        let [curr, path] = queue.shift();
+        
+        if (curr === targetId) {
+          paths.push(path);
+          continue;
+        }
+        
+        if (path.length >= maxDepth) continue;
+        
+        let neighbors = adjList[curr] || [];
+        for (let neighbor of neighbors) {
+          if (!path.includes(neighbor)) {
+            queue.push([neighbor, [...path, neighbor]]);
+          }
+        }
+      }
+      return paths;
+    }
+
+    // Architecture call flow verification (Graphify)
+    function runStructuralAudit(data) {
+      if (!data || !data.nodes || !data.links) {
+        document.getElementById("arch-flows-list").innerHTML = `<div class="sec-empty-state">No graph data available.</div>`;
+        return;
+      }
+      
+      const nodes = data.nodes;
+      const links = data.links;
+      
+      const nodesMap = {};
+      nodes.forEach(n => {
+        nodesMap[n.id] = n;
+      });
+      
+      const adjList = {};
+      nodes.forEach(n => { adjList[n.id] = []; });
+      
+      links.forEach(l => {
+        const s = l.source;
+        const t = l.target;
+        if (adjList[s] && adjList[t]) {
+          adjList[s].push(t);
+          adjList[t].push(s);
+        }
+      });
+      
+      const inputRegex = /(request|payload|input|message|args)/i;
+      const sanitizerRegex = /(verify|sanitize|pii|auth|check|filter)/i;
+      const sinkRegex = /(log|ledger|metric|write|save|store|db)/i;
+      
+      const inputs = [];
+      const sanitizers = [];
+      const sinks = [];
+      
+      const dbModelRegex = /(model|schema|store|database)/i;
+      const telemetryRegex = /(log|telemetry|metric|tracker)/i;
+      const dbModels = [];
+      const telemetryNodes = [];
+      
+      nodes.forEach(n => {
+        const lbl = n.label || "";
+        const file = n.source_file || "";
+        
+        if (inputRegex.test(lbl) || inputRegex.test(file)) {
+          inputs.push(n);
+        }
+        if (sanitizerRegex.test(lbl) || sanitizerRegex.test(file)) {
+          sanitizers.push(n);
+        }
+        if (sinkRegex.test(lbl) || sinkRegex.test(file)) {
+          sinks.push(n);
+        }
+        
+        if (dbModelRegex.test(lbl) || dbModelRegex.test(file)) {
+          dbModels.push(n);
+        }
+        if (telemetryRegex.test(lbl) || telemetryRegex.test(file)) {
+          telemetryNodes.push(n);
+        }
+      });
+      
+      let allFlows = [];
+      let violationsCount = 0;
+      let safeCount = 0;
+      
+      const sanitizerIds = sanitizers.map(s => s.id);
+      
+      inputs.forEach(input => {
+        sinks.forEach(sink => {
+          if (input.id === sink.id) return;
+          
+          const paths = findPaths(input.id, sink.id, adjList, nodesMap, 5);
+          paths.forEach(path => {
+            const traversedSanitizers = path.filter(nodeId => sanitizerIds.includes(nodeId));
+            const isSafe = traversedSanitizers.length > 0;
+            
+            allFlows.push({
+              input: input,
+              sink: sink,
+              path: path.map(id => nodesMap[id]),
+              isSafe: isSafe,
+              sanitizers: traversedSanitizers.map(id => nodesMap[id])
+            });
+            
+            if (isSafe) safeCount++;
+            else violationsCount++;
+          });
+        });
+      });
+      
+      let isolationViolations = [];
+      dbModels.forEach(model => {
+        telemetryNodes.forEach(tele => {
+          if (model.id === tele.id) return;
+          
+          const paths = findPaths(model.id, tele.id, adjList, nodesMap, 4);
+          paths.forEach(path => {
+            const traversedSanitizers = path.filter(nodeId => sanitizerIds.includes(nodeId));
+            if (traversedSanitizers.length === 0) {
+              isolationViolations.push({
+                model: model,
+                telemetry: tele,
+                path: path.map(id => nodesMap[id])
+              });
+            }
+          });
+        });
+      });
+      
+      document.getElementById("arch-total-flows").innerText = `${allFlows.length} Flows`;
+      document.getElementById("arch-violations-count").innerText = violationsCount;
+      document.getElementById("arch-safe-count").innerText = safeCount;
+      
+      const isolationEl = document.getElementById("arch-isolation-status");
+      if (isolationViolations.length > 0) {
+        isolationEl.innerText = `${isolationViolations.length} Unsafe`;
+        isolationEl.className = "metric-value text-red";
+      } else {
+        isolationEl.innerText = "Isolated";
+        isolationEl.className = "metric-value text-green";
+      }
+      
+      const listContainer = document.getElementById("arch-flows-list");
+      listContainer.innerHTML = "";
+      
+      if (allFlows.length === 0 && isolationViolations.length === 0) {
+        listContainer.innerHTML = `<div class="sec-empty-state">No call flows found between inputs and sinks in this graph.</div>`;
+        return;
+      }
+      
+      isolationViolations.forEach(v => {
+        const div = document.createElement("div");
+        div.className = "sec-item sec-violation-item";
+        
+        const pathStr = v.path.map(n => n.label).join(" → ");
+        div.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:600; color:#ff5252;">DB-Telemetry Leaking</span>
+            <span class="sec-badge badge-alert">Isolation Risk</span>
+          </div>
+          <div style="font-size:12px; color:var(--text-main); font-family:'Fira Code', monospace; line-height:1.4;">
+            ${pathStr}
+          </div>
+          <div style="font-size:11px; color:var(--text-muted);">
+            Raw model <strong>${v.model.label}</strong> connects directly to logger <strong>${v.telemetry.label}</strong> in <code>${v.model.source_file}</code>.
+          </div>
+        `;
+        listContainer.appendChild(div);
+      });
+      
+      allFlows.forEach(flow => {
+        const div = document.createElement("div");
+        div.className = `sec-item ${flow.isSafe ? 'sec-safe-item' : 'sec-violation-item'}`;
+        
+        const pathStr = flow.path.map(n => n.label).join(" → ");
+        const badgeClass = flow.isSafe ? "badge-success" : "badge-alert";
+        const badgeText = flow.isSafe ? "Safe" : "Unsafe Flow";
+        
+        let infoText = "";
+        if (flow.isSafe) {
+          infoText = `Sanitized by: <strong>${flow.sanitizers.map(s => s.label).join(", ")}</strong>`;
+        } else {
+          infoText = `<strong>Warning:</strong> Untrusted inputs reach logging/telemetry directly without sanitization!`;
+        }
+        
+        div.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:600; color:${flow.isSafe ? '#00e676' : '#ff5252'};">${flow.input.label} to ${flow.sink.label}</span>
+            <span class="sec-badge ${badgeClass}">${badgeText}</span>
+          </div>
+          <div style="font-size:12px; color:var(--text-main); font-family:'Fira Code', monospace; line-height:1.4;">
+            ${pathStr}
+          </div>
+          <div style="font-size:11px; color:var(--text-muted);">
+            ${infoText}
+          </div>
+        `;
+        listContainer.appendChild(div);
+      });
+    }
+
+    // Static analysis variable and routine scan (Semgrep-style)
+    async function runStaticCodeScan() {
+      const listContainer = document.getElementById("static-scan-list");
+      listContainer.innerHTML = `<div class="sec-empty-state"><div class="spinner" style="width:20px; height:20px; border-width:2px; margin-bottom:8px; display:inline-block; vertical-align:middle; animation:spin 1s linear infinite;"></div> Scanning repository files...</div>`;
+      
+      if (!activeGraphData || !activeGraphData.nodes) {
+        listContainer.innerHTML = `<div class="sec-empty-state">No codebase files available to scan.</div>`;
+        return;
+      }
+      
+      const files = [...new Set(activeGraphData.nodes
+        .map(n => n.source_file)
+        .filter(f => f && (f.endsWith(".ts") || f.endsWith(".js") || f.endsWith(".py"))))
+      ];
+      
+      let scannedCount = 0;
+      let issues = [];
+      
+      for (let file of files) {
+        try {
+          const filePath = `./${activeRepo.id}/${file}`;
+          const response = await fetch(filePath);
+          if (!response.ok) continue;
+          
+          const content = await response.text();
+          scannedCount++;
+          
+          const lines = content.split("\n");
+          
+          // Custom Semgrep Rule: log functions accepting patient, health, or ssn parameters
+          const funcRegexes = [
+            /(?:async\s+)?function\s+(\w*log\w*)\s*\(([^)]*)\)/gi,
+            /(?:const|let|var)\s+(\w*log\w*)\s*=\s*(?:async\s*)?\(([^)]*)\)\s*=>/gi,
+            /(\w*log\w*)\s*\(([^)]*)\)\s*\{/gi
+          ];
+          
+          funcRegexes.forEach(regex => {
+            let match;
+            regex.lastIndex = 0;
+            while ((match = regex.exec(content)) !== null) {
+              const funcName = match[1];
+              const params = match[2];
+              
+              if (/(patient|health|ssn)/i.test(params)) {
+                const index = match.index;
+                const lineNumber = content.substring(0, index).split("\n").length;
+                issues.push({
+                  file: file,
+                  line: lineNumber,
+                  rule: "Semgrep: Unsafe Parameter Logging",
+                  severity: "WARNING",
+                  snippet: lines[lineNumber - 1].trim(),
+                  desc: `Function <code>${funcName}</code> accepts sensitive parameter <code>(${params})</code>.`
+                });
+              }
+            }
+          });
+          
+          // Custom Semgrep Rule: Hardcoded secrets
+          const secretRegex = /\b(api_key|apikey|secret|token|password|key)\s*=\s*['"`]([A-Za-z0-9_\-]{8,})['"`]/gi;
+          let secretMatch;
+          secretRegex.lastIndex = 0;
+          while ((secretMatch = secretRegex.exec(content)) !== null) {
+            const varName = secretMatch[1];
+            const val = secretMatch[2];
+            if (/^(key|secret|token|password|api_key|auth|none|null|undefined)$/i.test(val)) continue;
+            
+            const index = secretMatch.index;
+            const lineNumber = content.substring(0, index).split("\n").length;
+            issues.push({
+              file: file,
+              line: lineNumber,
+              rule: "Semgrep: Hardcoded Secret",
+              severity: "CRITICAL",
+              snippet: lines[lineNumber - 1].trim(),
+              desc: `Possible hardcoded secret assigned to <code>${varName}</code>.`
+            });
+          }
+          
+          // Custom Semgrep Rule: Sensitive variables
+          lines.forEach((line, i) => {
+            if (/\b(?:const|let|var)\s+(\w*(?:ssn|patient|health|phone|email)\w*)\s*=/i.test(line)) {
+              if (/api_key|secret|token|password/i.test(line)) return;
+              issues.push({
+                file: file,
+                line: i + 1,
+                rule: "Semgrep: Sensitive Variable",
+                severity: "INFO",
+                snippet: line.trim(),
+                desc: `Sensitive PII/PHI variable name declared.`
+              });
+            }
+          });
+          
+        } catch (e) {
+          console.error(`Error scanning file ${file}:`, e);
+        }
+      }
+      
+      document.getElementById("static-files-count").innerText = scannedCount;
+      document.getElementById("static-issues-count").innerText = issues.length;
+      
+      listContainer.innerHTML = "";
+      if (issues.length === 0) {
+        listContainer.innerHTML = `<div class="sec-empty-state" style="border-color: #00e676; color: #00e676;">No security issues flagged in ${scannedCount} files scanned.</div>`;
+        return;
+      }
+      
+      issues.forEach(issue => {
+        const div = document.createElement("div");
+        
+        let borderClass = "sec-scan-item";
+        let badgeClass = "badge-warn";
+        if (issue.severity === "CRITICAL") {
+          borderClass = "sec-violation-item";
+          badgeClass = "badge-alert";
+        } else if (issue.severity === "INFO") {
+          badgeClass = "badge-info";
+        }
+        
+        div.className = `sec-item ${borderClass}`;
+        div.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:600; color:var(--text-main);">${issue.rule}</span>
+            <span class="sec-badge ${badgeClass}">${issue.severity}</span>
+          </div>
+          <div style="font-size:12px; color:var(--text-muted);">
+            File: <a href="./${activeRepo.id}/${issue.file}" target="_blank" style="color:var(--accent-color);">${issue.file}:${issue.line}</a>
+          </div>
+          <div style="font-size:12px; font-family:'Fira Code', monospace; background:rgba(0,0,0,0.3); padding:6px; border-radius:4px; overflow-x:auto; margin:4px 0;">
+            ${escapeHtml(issue.snippet)}
+          </div>
+          <div style="font-size:11px; color:var(--text-muted);">
+            ${issue.desc}
+          </div>
+        `;
+        listContainer.appendChild(div);
+      });
+    }
+
+    function escapeHtml(text) {
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // Live DLP Sanitization Playground (Cloud DLP / Macie simulator)
+    function runDlpSanitize() {
+      const text = document.getElementById("dlp-input").value;
+      const outputEl = document.getElementById("dlp-output");
+      
+      if (!text.trim()) {
+        outputEl.innerHTML = `<span style="color: var(--text-muted); font-style: italic;">Redacted results will render here in real-time...</span>`;
+        document.getElementById("dlp-redacted-count").innerText = "0 Redacted";
+        document.getElementById("dlp-redacted-count").className = "sec-badge badge-info";
+        return;
+      }
+      
+      let count = 0;
+      let sanitizedText = escapeHtml(text);
+      
+      const dlpPatterns = [
+        {
+          name: "SSN",
+          regex: /\b\d{3}-\d{2}-\d{4}\b/g,
+          replacement: (match) => {
+            count++;
+            return `<span class="dlp-highlight">[REDACTED_SSN]</span>`;
+          }
+        },
+        {
+          name: "Phone",
+          regex: /\b(?:\+?\d{1,3}[-. ]?)?\(?\d{3}\)?[-. ]?\d{3}[-. ]?\d{4}\b/g,
+          replacement: (match) => {
+            count++;
+            return `<span class="dlp-highlight">[REDACTED_PHONE]</span>`;
+          }
+        },
+        {
+          name: "Email",
+          regex: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
+          replacement: (match) => {
+            count++;
+            return `<span class="dlp-highlight">[REDACTED_EMAIL]</span>`;
+          }
+        },
+        {
+          name: "ICD-10",
+          regex: /\b[A-Z]\d{2}(?:\.\d{1,2})?\b/g,
+          replacement: (match) => {
+            count++;
+            return `<span class="dlp-highlight">[REDACTED_ICD10: ${match}]</span>`;
+          }
+        }
+      ];
+      
+      dlpPatterns.forEach(pattern => {
+        sanitizedText = sanitizedText.replace(pattern.regex, pattern.replacement);
+      });
+      
+      outputEl.innerHTML = sanitizedText;
+      document.getElementById("dlp-redacted-count").innerText = `${count} Redacted`;
+      
+      const badge = document.getElementById("dlp-redacted-count");
+      if (count > 0) {
+        badge.className = "sec-badge badge-alert";
+      } else {
+        badge.className = "sec-badge badge-success";
+      }
+    }
+
+    const SCENARIOS = {
+      medical: `Patient: Thomas McCarthy, DOB: 10/12/1984, SSN: 666-23-9901.
+Presenting with uncontrolled diabetes (E11.9) and high blood pressure (I10).
+Contact number listed as (555) 019-2834.
+Send update to dr.mccarthy@healthnet.org.`,
+      log: `2026-06-08 14:10:02 [DB_EXEC] INSERT INTO patients (name, phone, ssn, diagnoses) VALUES ('Jane Doe', '+1-312-555-0144', '333-88-2911', 'J45.901');
+2026-06-08 14:10:05 [WARN] Sync failed for record with email jane.doe@gmail.com.`,
+      api: `{
+  "event": "payment.success",
+  "customer": {
+    "name": "Alice Cooper",
+    "ssn_token": "999-44-8877",
+    "phone": "202-555-0199",
+    "email": "alice.cooper@fintech.io"
+  },
+  "meta": {
+    "billing_zip": "90210",
+    "billing_country": "US"
+  }
+}`
+    };
+
+    function loadDlpScenario(type) {
+      const input = document.getElementById("dlp-input");
+      input.value = SCENARIOS[type] || "";
+      runDlpSanitize();
+    }
+
+    let currentLayoutMode = "force";
+
+    function changeLayout(mode) {
+      currentLayoutMode = mode;
+      applyLayoutMode(mode);
+    }
+
+    function applyLayoutMode(mode) {
+      const iframe = document.getElementById("graph-frame");
+      if (!iframe || !iframe.contentWindow) return;
+
+      const doc = iframe.contentDocument || iframe.contentWindow.document;
+
+      // Inject script to expose the block-scoped 'network' variable to window.capturedNetwork
+      if (!iframe.contentWindow.capturedNetwork) {
+        try {
+          const script = doc.createElement("script");
+          script.textContent = "if (typeof network !== 'undefined') { window.capturedNetwork = network; }";
+          doc.body.appendChild(script);
+        } catch (e) {
+          console.error("Failed to inject network capture script:", e);
+        }
+      }
+
+      const network = iframe.contentWindow.capturedNetwork;
+      if (!network) {
+        // Retry once after 100ms if network is not ready yet
+        setTimeout(() => applyLayoutMode(mode), 100);
+        return;
+      }
+
+      if (mode === "force") {
+        network.setOptions({
+          layout: { hierarchical: { enabled: false } },
+          physics: {
+            enabled: true,
+            solver: 'forceAtlas2Based',
+            forceAtlas2Based: {
+              gravitationalConstant: -60,
+              centralGravity: 0.005,
+              springLength: 120,
+              springConstant: 0.08,
+              damping: 0.4,
+              avoidOverlap: 0.8
+            }
+          }
+        });
+      } else {
+        network.setOptions({
+          layout: {
+            hierarchical: {
+              enabled: true,
+              direction: mode, // UD or LR
+              sortMethod: "directed",
+              levelSeparation: mode === "UD" ? 120 : 180,
+              nodeSpacing: 120,
+              treeSpacing: 180
+            }
+          },
+          physics: { enabled: false }
+        });
+      }
+    }
+
+    // Listen to search input
+    document.getElementById("search").addEventListener("input", (e) => {
+      renderRepoList(e.target.value);
+    });
+
+    // Start App
+    window.onload = () => {
+      renderRepoList();
+      selectRepo(REPOSITORIES[0]);
+      switchTab("graph");
+      
+      const dlpInput = document.getElementById("dlp-input");
+      if (dlpInput) {
+        dlpInput.addEventListener("input", runDlpSanitize);
+      }
+    };
+  </script>
+</body>
+</html>
