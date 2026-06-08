@@ -39,7 +39,8 @@ Everything runs client-side. The portal reads pre-generated AST graph artifacts 
 
 The Codebase Navigator provides a filterable, multi-repository workspace for selecting an audit target and switching between analysis views.
 
-![Workspace Navigator](docs/screenshot-workspace.png)
+<img width="1637" height="1024" alt="image" src="https://github.com/user-attachments/assets/fd021817-8e9c-42bf-9f53-4bc4c14333a8" />
+
 
 ### Security Governance Dashboard
 
