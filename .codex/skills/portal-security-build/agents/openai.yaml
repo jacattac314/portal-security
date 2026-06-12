@@ -1,0 +1,4 @@
+interface:
+  display_name: "Portal Security Build"
+  short_description: "Build Portal Security with Graphify artifacts"
+  default_prompt: "Use $portal-security-build to sync, verify, build, and test the Portal Security dashboard."

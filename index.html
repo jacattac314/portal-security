@@ -323,6 +323,35 @@
       background: transparent;
     }
 
+    .graph-empty-state {
+      width: 100%;
+      height: 100%;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 40px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+
+    .graph-empty-state h3 {
+      margin: 0;
+      color: var(--text-main);
+      font-size: 20px;
+    }
+
+    .graph-empty-state p {
+      max-width: 620px;
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    .graph-empty-state code {
+      color: var(--accent-color);
+    }
+
     .report-view {
       width: 100%;
       height: 100%;
@@ -445,7 +474,7 @@
       width: 100%;
       height: 100%;
       background: var(--bg-color);
-      display: flex;
+      display: none;
       justify-content: center;
       align-items: center;
       z-index: 100;
@@ -469,7 +498,7 @@
 
     /* --- Layout Selector --- */
     .layout-selector {
-      display: flex;
+      display: none;
       align-items: center;
       gap: 8px;
     }
@@ -789,9 +818,9 @@
     <!-- Tabs controls -->
     <div class="tabs-container">
       <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('graph')">Interactive 3D Graph</button>
+        <button class="tab-btn" onclick="switchTab('graph')">Interactive 3D Graph</button>
         <button class="tab-btn" onclick="switchTab('report')">Structure Report</button>
-        <button class="tab-btn" onclick="switchTab('security')">Security Governance</button>
+        <button class="tab-btn active" onclick="switchTab('security')">Security Governance</button>
       </div>
       <div class="layout-selector" id="layout-ctrl">
         <span style="font-size: 13px; color: var(--text-muted);">Layout:</span>
@@ -816,8 +845,17 @@
       </div>
 
       <!-- Tab 1: Graph Iframe -->
-      <div class="panel active" id="panel-graph">
+      <div class="panel" id="panel-graph">
         <iframe id="graph-frame" src="about:blank"></iframe>
+        <div class="graph-empty-state" id="graph-empty-state">
+          <h3>Graph artifact unavailable</h3>
+          <p>
+            This repository does not include the generated Graphify visualization at
+            <code id="graph-empty-path"></code>. Generate the artifact to enable this view,
+            or use Security Governance for the built-in DLP controls.
+          </p>
+          <button class="dlp-btn btn-sec" onclick="switchTab('security')">Open Security Governance</button>
+        </div>
       </div>
 
       <!-- Tab 2: HTML Markdown View -->
@@ -828,7 +866,7 @@
       </div>
 
       <!-- Tab 3: Security Governance View -->
-      <div class="panel" id="panel-security">
+      <div class="panel active" id="panel-security">
         <div class="security-view">
           
           <!-- Column 1: Architecture Verification -->
@@ -1058,7 +1096,7 @@
     ];
 
     let activeRepo = REPOSITORIES[0];
-    let activeTab = "graph";
+    let activeTab = "security";
     let activeGraphData = null;
 
     // Initialize list
@@ -1111,12 +1149,44 @@
       // Fetch graph metadata summary if available, otherwise hide
       document.getElementById("w-meta").innerText = "Loading details...";
       
-      // Trigger data load
-      showLoading(true);
-      
-      // Set iframe src
+      // Only show the graph loader while the graph tab is visible.
+      showLoading(activeTab === "graph");
+
       const iframe = document.getElementById("graph-frame");
-      iframe.src = repo.graphPath;
+      const graphEmptyState = document.getElementById("graph-empty-state");
+      document.getElementById("graph-empty-path").innerText = repo.graphPath;
+      iframe.onload = null;
+      iframe.src = "about:blank";
+      iframe.style.display = "none";
+      graphEmptyState.style.display = "flex";
+
+      let graphAvailable = false;
+      try {
+        const graphResponse = await fetch(repo.graphPath, {
+          method: "HEAD",
+          cache: "no-store"
+        });
+        graphAvailable = graphResponse.ok;
+      } catch (err) {
+        console.info(`Graph visualization unavailable for ${repo.name}.`);
+      }
+
+      if (graphAvailable) {
+        graphEmptyState.style.display = "none";
+        iframe.style.display = "block";
+        iframe.onload = () => {
+          showLoading(false);
+          setTimeout(() => {
+            applyLayoutMode(document.getElementById("layout-mode").value);
+            if (activeTab === "security") {
+              applySecurityGraphColoring();
+            }
+          }, 150);
+        };
+        iframe.src = repo.graphPath;
+      } else {
+        showLoading(false);
+      }
       
       // Load Markdown report
       try {
@@ -1138,11 +1208,11 @@
           }
         } else {
           document.getElementById("report-content").innerHTML = `<p style="color: var(--accent-color);">No report structure file found for ${repo.name}. Did you run graphify update?</p>`;
-          document.getElementById("w-meta").innerText = "AST Graph Loaded";
+          document.getElementById("w-meta").innerText = graphAvailable ? "AST Graph Loaded" : "Graph artifacts unavailable";
         }
       } catch (err) {
         document.getElementById("report-content").innerHTML = `<p style="color: var(--accent-color);">Error fetching report: ${err.message}</p>`;
-        document.getElementById("w-meta").innerText = "AST Graph Loaded";
+        document.getElementById("w-meta").innerText = graphAvailable ? "AST Graph Loaded" : "Graph artifacts unavailable";
       }
       
       // Reset security panel states when switching repo
@@ -1160,22 +1230,15 @@
           if (activeTab === "security") {
             runStructuralAudit(activeGraphData);
           }
+        } else if (activeTab === "security") {
+          runStructuralAudit(null);
         }
       } catch (err) {
         console.error("Error loading graph JSON:", err);
+        if (activeTab === "security") {
+          runStructuralAudit(null);
+        }
       }
-      
-      // Keep iframe load synchronous to display spinner
-      iframe.onload = () => {
-        showLoading(false);
-        // Add a small delay to allow vis-network inside the iframe to finish initialization
-        setTimeout(() => {
-          applyLayoutMode(document.getElementById("layout-mode").value);
-          if (activeTab === "security") {
-            applySecurityGraphColoring();
-          }
-        }, 150);
-      };
     }
 
     // Toggle Loading overlay
@@ -1842,7 +1905,17 @@
           replacement: (match, p1, p2) => {
             count++;
             if (policy === "mask") {
-              const maskedPhone = p2.replace(/\d(?=\d{4})/g, '*');
+              let digitsSeen = 0;
+              const maskedPhone = p2
+                .split("")
+                .reverse()
+                .map(char => {
+                  if (!/\d/.test(char)) return char;
+                  digitsSeen++;
+                  return digitsSeen > 4 ? "*" : char;
+                })
+                .reverse()
+                .join("");
               return p1 + `<span class="dlp-highlight">${maskedPhone}</span>`;
             } else if (policy === "token") {
               return p1 + `<span class="dlp-highlight">TOK_PHONE_${simpleHash(p2)}</span>`;
@@ -2002,7 +2075,7 @@ Send update to dr.mccarthy@healthnet.org.`,
     window.onload = () => {
       renderRepoList();
       selectRepo(REPOSITORIES[0]);
-      switchTab("graph");
+      switchTab("security");
       
       const dlpInput = document.getElementById("dlp-input");
       if (dlpInput) {

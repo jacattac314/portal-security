@@ -1,0 +1,107 @@
+{
+  "App.tsx": {
+    "mtime": 1780927225.6443958,
+    "ast_hash": "fbc862f8f818125be0036aa9fbf00308",
+    "semantic_hash": ""
+  },
+  "components/Canvas.tsx": {
+    "mtime": 1780927225.64465,
+    "ast_hash": "c05c3f2888c3360ee65fa3f7227fe009",
+    "semantic_hash": ""
+  },
+  "components/ChatPanel.tsx": {
+    "mtime": 1780927225.6447377,
+    "ast_hash": "0292490c2c596c70da9221b3135988ce",
+    "semantic_hash": ""
+  },
+  "components/ExecutionModal.tsx": {
+    "mtime": 1780927225.6448298,
+    "ast_hash": "786398833a1429c0984bf51f90ffccc5",
+    "semantic_hash": ""
+  },
+  "components/GenerationProgress.tsx": {
+    "mtime": 1780927225.6449144,
+    "ast_hash": "08d213333c161706d9af9b8dfb07880f",
+    "semantic_hash": ""
+  },
+  "components/LandingPage.tsx": {
+    "mtime": 1780927225.6449962,
+    "ast_hash": "f9b347499d3a796213fee55b3654952b",
+    "semantic_hash": ""
+  },
+  "components/Node.tsx": {
+    "mtime": 1780927225.6450753,
+    "ast_hash": "acc9fa909b87168e844ab0d55e7afd2d",
+    "semantic_hash": ""
+  },
+  "components/ProjectInput.tsx": {
+    "mtime": 1780927225.6451616,
+    "ast_hash": "30d205b8bc300b30d94a3c9f02f9e303",
+    "semantic_hash": ""
+  },
+  "components/PropertiesPanel.tsx": {
+    "mtime": 1780927225.6452832,
+    "ast_hash": "89163075f4b39a86d1525eff39fd67e1",
+    "semantic_hash": ""
+  },
+  "components/RoadmapVisualizer.tsx": {
+    "mtime": 1780927225.6454303,
+    "ast_hash": "1712eeac0505d5039036e0dcf06af9b4",
+    "semantic_hash": ""
+  },
+  "constants.ts": {
+    "mtime": 1780927225.6455448,
+    "ast_hash": "2199369d39320d906d12b559c449be9b",
+    "semantic_hash": ""
+  },
+  "index.tsx": {
+    "mtime": 1780927225.6456618,
+    "ast_hash": "4f9d0a7096ddad7c3bf33fd8d73f7d70",
+    "semantic_hash": ""
+  },
+  "metadata.json": {
+    "mtime": 1780927225.6457162,
+    "ast_hash": "f8d2462a91a38f86a6b1ddc2ae6613c5",
+    "semantic_hash": ""
+  },
+  "package.json": {
+    "mtime": 1780927225.645778,
+    "ast_hash": "917986a8b469a2f0aa416dee5d977e45",
+    "semantic_hash": ""
+  },
+  "services/geminiService.ts": {
+    "mtime": 1780927225.6458993,
+    "ast_hash": "195c9a7aae30a90df4458f86338f2525",
+    "semantic_hash": ""
+  },
+  "tsconfig.json": {
+    "mtime": 1780927225.6459658,
+    "ast_hash": "58ee5bb8af5d5a5994d9d6a9b18750dd",
+    "semantic_hash": ""
+  },
+  "types.ts": {
+    "mtime": 1780927225.646035,
+    "ast_hash": "c3cf9eb70685cf9b1f36a5a0cce51ba0",
+    "semantic_hash": ""
+  },
+  "utils/roadmapParser.ts": {
+    "mtime": 1780927225.646174,
+    "ast_hash": "a1b686a466cb88930174225f43f37293",
+    "semantic_hash": ""
+  },
+  "vite.config.ts": {
+    "mtime": 1780927225.6462243,
+    "ast_hash": "b02247fc15de1a3ff3a9cb4c1bbe3fa1",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1780927225.6445317,
+    "ast_hash": "8989f5cb4b4b4ddbcc6ea9ba91f16ee4",
+    "semantic_hash": ""
+  },
+  "index.html": {
+    "mtime": 1780927225.645613,
+    "ast_hash": "c1e547654ff83fdd02f8796096ad40fd",
+    "semantic_hash": ""
+  }
+}

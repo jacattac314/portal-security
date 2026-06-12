@@ -86,15 +86,18 @@ Because the analysis artifacts are pre-generated and the sanitization runs local
 
 ## Getting Started
 
-Clone the repository and serve it from a local static HTTP server. A server is required (rather than opening the file directly) so the portal can fetch the local AST graph artifacts without running into CORS restrictions.
+Clone the repository, run the required build, and serve the generated `dist` directory. The build synchronizes locally available Graphify outputs, verifies every configured repository has complete artifacts, and packages them with the portal.
 
 ```bash
 # Clone the repository
 git clone https://github.com/jacattac314/portal-security.git
 cd portal-security
 
-# Start a local static server
-python3 -m http.server 8080
+# Build and verify the static portal
+npm run build
+
+# Serve the generated site
+python3 -m http.server 8080 --directory dist
 ```
 
 Then open the portal in your browser:
@@ -113,10 +116,20 @@ The Architecture and Structure Report views render data produced by the Graphify
 
 ```
 <repo>/graphify-out/graph.json
+<repo>/graphify-out/graph.html
 <repo>/graphify-out/GRAPH_REPORT.md
 ```
 
-Run the Graphify analysis step against your target repository to generate these files, then commit them alongside the portal so the call-flow graph and structure report populate. Until these artifacts are present, the Architecture and Structure Report tabs will prompt you to run the Graphify update step.
+Repository mappings live in `graphify-artifacts.json`. The sync step searches `GRAPHIFY_SOURCE_ROOTS`, `~/Documents/antigravity`, and `~/.graphify/repos/jacattac314` for generated outputs. Update source repositories with Graphify, then run:
+
+```bash
+npm run graphify:sync
+npm run build
+```
+
+`npm run build` always runs artifact sync and verification before creating `dist`. It fails when any required artifact is absent or malformed, including in CI.
+
+The repository also includes the `portal-security-build` Codex skill under `.codex/skills/`. It defines the same mandatory build and browser-verification workflow for future agent changes.
 
 ---
 
@@ -132,6 +145,9 @@ The portal is built around a data-minimization principle. All sanitization and a
 portal-security/
 ├── portal.html     # Main governance portal (navigator, analysis tabs, DLP console)
 ├── index.html      # Entry point
+├── graphify-artifacts.json
+├── scripts/        # Artifact sync, verification, and static build
+├── <repo>/graphify-out/
 ├── docs/           # Documentation assets and screenshots
 └── README.md
 ```

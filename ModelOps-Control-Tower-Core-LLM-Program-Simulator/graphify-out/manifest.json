@@ -1,0 +1,157 @@
+{
+  "agents/regression-alert.py": {
+    "mtime": 1780927187.0593743,
+    "ast_hash": "8d9fe8ebb5ba2952b42717b1768fa0b2",
+    "semantic_hash": ""
+  },
+  "agents/stall-detector.py": {
+    "mtime": 1780927187.0594914,
+    "ast_hash": "d06aa69a8b02e7a799d7cb18a08bef0d",
+    "semantic_hash": ""
+  },
+  "app/app/components/EvaluationView.tsx": {
+    "mtime": 1780927187.0597656,
+    "ast_hash": "674664833283b2fcb3b8d73f76c34498",
+    "semantic_hash": ""
+  },
+  "app/app/components/ExperimentDashboard.tsx": {
+    "mtime": 1780927187.0599027,
+    "ast_hash": "73352bc107100b6fa7e12cc1c2ee46cf",
+    "semantic_hash": ""
+  },
+  "app/app/components/InfraHealth.tsx": {
+    "mtime": 1780927187.060017,
+    "ast_hash": "2956757ba67af14675b9d08bfd3c4973",
+    "semantic_hash": ""
+  },
+  "app/app/components/LaunchReadiness.tsx": {
+    "mtime": 1780927187.0601227,
+    "ast_hash": "f15db05552bcb676964906592ae1bf8c",
+    "semantic_hash": ""
+  },
+  "app/app/layout.tsx": {
+    "mtime": 1780927187.0602827,
+    "ast_hash": "2686882e7bca69cdcf71a5afd7ad49be",
+    "semantic_hash": ""
+  },
+  "app/app/lib/data.ts": {
+    "mtime": 1780927187.0604107,
+    "ast_hash": "78bcb103b17bb3efe0a6dfb2f47a5047",
+    "semantic_hash": ""
+  },
+  "app/app/page.tsx": {
+    "mtime": 1780927187.0608447,
+    "ast_hash": "9209e32e2262fcaf992dac8cb2c7405f",
+    "semantic_hash": ""
+  },
+  "app/next.config.js": {
+    "mtime": 1780927187.0610018,
+    "ast_hash": "f0ae8caf776e76d21bd02c3cbf7e0b61",
+    "semantic_hash": ""
+  },
+  "app/package.json": {
+    "mtime": 1780927187.0615332,
+    "ast_hash": "6412947cabed8fee0cc5e7b948d7760c",
+    "semantic_hash": ""
+  },
+  "app/postcss.config.js": {
+    "mtime": 1780927187.0617435,
+    "ast_hash": "8640f9b2e6475cc3f5b1ff4548925765",
+    "semantic_hash": ""
+  },
+  "app/tailwind.config.ts": {
+    "mtime": 1780927187.0619254,
+    "ast_hash": "56905d2463187f39b5b23e0831120ab9",
+    "semantic_hash": ""
+  },
+  "app/tsconfig.json": {
+    "mtime": 1780927187.0621037,
+    "ast_hash": "570e85507d1fb0c609255b9a0aa95595",
+    "semantic_hash": ""
+  },
+  "evals/benchmarks.json": {
+    "mtime": 1780927187.0637512,
+    "ast_hash": "0bf58471041f6ec2706f783df037dd27",
+    "semantic_hash": ""
+  },
+  "evals/regression_tracker.json": {
+    "mtime": 1780927187.0638378,
+    "ast_hash": "8c9307dd2a67cf3c4f4b4452e109159b",
+    "semantic_hash": ""
+  },
+  "experiments/datasets.json": {
+    "mtime": 1780927187.0639737,
+    "ast_hash": "56dc321a374654721204a20774ec56fb",
+    "semantic_hash": ""
+  },
+  "experiments/model_configs.json": {
+    "mtime": 1780927187.064059,
+    "ast_hash": "58f8fa7f08a5d89a5bc24aae7565447a",
+    "semantic_hash": ""
+  },
+  "experiments/run_registry.json": {
+    "mtime": 1780927187.0641541,
+    "ast_hash": "d1b6e4fc820a50936a470035164463b7",
+    "semantic_hash": ""
+  },
+  "infra/cluster_capacity.json": {
+    "mtime": 1780927187.0644617,
+    "ast_hash": "64dcbb93f14185312a5d5c90221f363a",
+    "semantic_hash": ""
+  },
+  "infra/gpu_budget.json": {
+    "mtime": 1780927187.06455,
+    "ast_hash": "d3e8c021dfdb8db2b3e517594226f6ee",
+    "semantic_hash": ""
+  },
+  "scripts/promote-model.py": {
+    "mtime": 1780927187.064728,
+    "ast_hash": "0fe2bce4fbb3e517441fcf048bdcb06a",
+    "semantic_hash": ""
+  },
+  "DEMO.md": {
+    "mtime": 1780927187.0589275,
+    "ast_hash": "cadb3f25797d45408fe986e1ce79f6c5",
+    "semantic_hash": ""
+  },
+  "IMPLEMENTATION_NOTES.md": {
+    "mtime": 1780927187.0590796,
+    "ast_hash": "f7c1931691d6b54bf77d72a9156427ae",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1780927187.0591977,
+    "ast_hash": "3e77e363dbde21688a948c75ab01b02c",
+    "semantic_hash": ""
+  },
+  "docs/architecture-decisions/001-system-architecture.md": {
+    "mtime": 1780927187.0625482,
+    "ast_hash": "b024762cfa7eabe46c6f209007df85a2",
+    "semantic_hash": ""
+  },
+  "docs/architecture-decisions/002-eval-pipeline-design.md": {
+    "mtime": 1780927187.0627694,
+    "ast_hash": "81d820900a51ce52dd909e06193c4460",
+    "semantic_hash": ""
+  },
+  "docs/evaluation-framework.md": {
+    "mtime": 1780927187.0629818,
+    "ast_hash": "54f3e9bd80a055bf69ebfea33e69d983",
+    "semantic_hash": ""
+  },
+  "docs/release-gates.md": {
+    "mtime": 1780927187.0633788,
+    "ast_hash": "96726bea8b7358298e6cda7ed8521b4f",
+    "semantic_hash": ""
+  },
+  "docs/training-strategy.md": {
+    "mtime": 1780927187.0635006,
+    "ast_hash": "75d9b62808cae8a2d1fe9de93c1d03bc",
+    "semantic_hash": ""
+  },
+  "docs/vision.md": {
+    "mtime": 1780927187.0635962,
+    "ast_hash": "760c39a9b2711e74713b470cad425e66",
+    "semantic_hash": ""
+  }
+}
