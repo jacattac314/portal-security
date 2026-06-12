@@ -1,0 +1,12 @@
+{
+  "name": "portal-security",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "graphify:sync": "node scripts/sync-graphify-artifacts.mjs",
+    "graphify:verify": "node scripts/verify-graphify-artifacts.mjs",
+    "build:static": "node scripts/build-static.mjs",
+    "build": "npm run graphify:sync && npm run graphify:verify && npm run build:static"
+  }
+}

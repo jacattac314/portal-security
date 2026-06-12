@@ -1,0 +1,58 @@
+{
+  "owner": "jacattac314",
+  "requiredFiles": [
+    "graph.html",
+    "graph.json",
+    "GRAPH_REPORT.md"
+  ],
+  "optionalFiles": [
+    "manifest.json",
+    ".graphify_labels.json"
+  ],
+  "repositories": [
+    {
+      "id": "shadowserve-ai",
+      "source": "shadowserve-ai"
+    },
+    {
+      "id": "shadow-governance",
+      "source": "shadow-governance"
+    },
+    {
+      "id": "Titan-Finance-",
+      "source": "Titan-Finance-"
+    },
+    {
+      "id": "local-ai-orchestrator",
+      "source": "local-ai-orchestrator"
+    },
+    {
+      "id": "SOVEREIGNDESK",
+      "source": "SOVEREIGNDESK"
+    },
+    {
+      "id": "AI-Project-Autopilot-Agent",
+      "source": "AI-Project-Autopilot-Agent"
+    },
+    {
+      "id": "JD-Automation-System",
+      "source": "JD-Automation-System"
+    },
+    {
+      "id": "ModelOps-Control-Tower-Core-LLM-Program-Simulator",
+      "source": "ModelOps-Control-Tower-Core-LLM-Program-Simulator"
+    },
+    {
+      "id": "Fluidity-",
+      "source": "Fluidity-"
+    },
+    {
+      "id": "Roadmap",
+      "source": "Roadmap"
+    },
+    {
+      "id": "vibrant-goodall",
+      "source": "vibrant-goodall"
+    }
+  ]
+}
